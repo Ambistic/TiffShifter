@@ -4,7 +4,7 @@ import os
 from PySide2.QtUiTools import QUiLoader
 from PySide2.QtWidgets import QApplication, QPushButton, QLineEdit, \
         QLabel, QAction, QFileDialog, QSlider, QProgressBar
-from PySide2.QtCore import QFile, QObject
+from PySide2.QtCore import QFile, QObject, Qt
 from PySide2 import QtGui
 from threading import RLock
 
@@ -65,6 +65,15 @@ class Interface(QObject):
         # btn.clicked.connect(self.ok_handler)
         self._open()
         self.window.show()
+
+    def get_modifier_value(self):
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ShiftModifier:
+            return 5
+        elif modifiers == Qt.ControlModifier:
+            return 20
+        else:
+            return 1
 
     def _open(self):
         fileName = QFileDialog.getOpenFileName(self.window, "Open File",
@@ -145,20 +154,24 @@ class Interface(QObject):
                 self.__stack.get_t())
 
 
-    def update_right(self, value):
-        self.__stack.delta_shift((1, 0))
+    def update_right(self, event):
+        value = self.get_modifier_value()
+        self.__stack.delta_shift((value, 0))
         self.show_image()
 
-    def update_left(self, value):
-        self.__stack.delta_shift((-1, 0))
+    def update_left(self, event):
+        value = self.get_modifier_value()
+        self.__stack.delta_shift((-value, 0))
         self.show_image()
 
-    def update_up(self, value):
-        self.__stack.delta_shift((0, -1))
+    def update_up(self, event):
+        value = self.get_modifier_value()
+        self.__stack.delta_shift((0, -value))
         self.show_image()
 
-    def update_down(self, value):
-        self.__stack.delta_shift((0, 1))
+    def update_down(self, event):
+        value = self.get_modifier_value()
+        self.__stack.delta_shift((0, value))
         self.show_image()
 
     def update_next(self, value):
