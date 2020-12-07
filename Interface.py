@@ -126,9 +126,11 @@ class Interface(QObject):
 
             img_file = self.__stack.get_image_file()
 
-            # pixmap = img_file
-            # pixmap = QtGui.QPixmap.fromImage(img_file)
-            pixmap = QtGui.QPixmap(img_file)
+            pixmap = img_file
+            # img = QtGui.QImage(img_file.tobytes(), *img_file.size,
+            #         QtGui.QImage.Format_Indexed8)
+            # pixmap = QtGui.QPixmap.fromImage(img)
+            # pixmap = QtGui.QPixmap(img_file)
             self.__image.setPixmap(pixmap)
             self.__image.adjustSize()
             current_shift = self.__stack.get_current_shift()

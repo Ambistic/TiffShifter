@@ -1,5 +1,7 @@
 import sys
 import PySide2
+from io import BytesIO
+from PySide2.QtGui import QImage, QPixmap
 
 import os
 import string
@@ -18,6 +20,7 @@ class Tif:
         self.Z = self.get_z()
         self.T = self.get_t()
 
+        # relative shift
         self.__list_shift = [(0, 0) for i in range(self.T)]
         self.imageNumber    = self.channels * self.T * self.Z
         self.currentT        = 0
@@ -117,8 +120,8 @@ class Tif:
             delta = self.get_best_delta(i, z, c)
             # careful, we shift the next one, not the current one
             self.__list_shift[i + 1] = (
-                self.__list_shift[i][0] + delta[1],
-                self.__list_shift[i][1] + delta[0],
+                delta[1],
+                delta[0],
                 )
 
         self._is_running = False
@@ -173,7 +176,24 @@ class Tif:
                 image    = image.resize((width, height))
             image.save(self.__redFileName)
             # return toqpixmap(image)
+            with BytesIO() as f:
+                image.save(f, format='png')
+                f.seek(0)
+                image_data = f.read()
+                qimg = QImage.fromData(image_data)
+                patch_qt = QPixmap.fromImage(qimg)
+                return patch_qt
+            return image.convert("L")
             return self.__redFileName
+
+    def get_absolute_shift(self, t):
+        abs_x, abs_y = 0, 0
+
+        for i in range(t + 1):
+            abs_x += self.__list_shift[i][0]
+            abs_y += self.__list_shift[i][1]
+
+        return abs_x, abs_y
 
     def adjust(self):
         self.tzc_image(c=self.currentChannel, t=self.currentT,
@@ -181,7 +201,10 @@ class Tif:
         # x    = self.Xs[tIndex][zIndex]
         # y    = self.Ys[tIndex][zIndex]
         t = self.currentT
-        x, y = self.__list_shift[t]
+
+        # get the right shift
+        x, y = self.get_absolute_shift(t)
+
         x1, y1, x2, y2, xOrigin, yOrigin = 0, 0, self.width, self.height, 0, 0
         if x < 0:
             x1 = abs(x)
@@ -211,15 +234,19 @@ class Tif:
             os.mkdir(directory)
         tLength = len(str(self.T))
         zLength = len(str(self.Z))
+        cLength = len(str(self.channels))
         i = 1
         for tIndex in range(0, self.T):
             for zIndex in range(0, self.Z):
-                fileName = directory + str(tIndex).zfill(tLength) \
-                        + "_" + str(zIndex).zfill(zLength) + ".tif"
-                # print("writing: %s\t%6d/%d" % (fileName, i, self.imageNumber))
-                i += 1
-                self.set_index(t=tIndex, z=zIndex)
-                self.adjust().save(fileName)
+                for channel in range(0, self.channels):
+                    fileName = directory + str(tIndex).zfill(tLength) \
+                            + "_" + str(zIndex).zfill(zLength) \
+                            + "_" + str(channel).zfill(cLength) \
+                            + ".tif"
+
+                    i += 1
+                    self.set_index(t=tIndex, z=zIndex)
+                    self.adjust().save(fileName)
         return True
 
 
