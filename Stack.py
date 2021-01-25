@@ -1,20 +1,18 @@
-import sys
-import PySide2
 from io import BytesIO
 from PySide2.QtGui import QImage, QPixmap
 
 import os
-import string
 from PIL import Image
 from pathlib import Path
 import numpy as np
 from threading import RLock
 
+
 class Tif:
     def __init__(self, tiffFileName):
-        self.tiffFileName    = Path(tiffFileName)
-        self.__tiff        = Image.open(self.tiffFileName)
-        self.__redFileName    = "redTmp.tif"
+        self.tiffFileName = Path(tiffFileName)
+        self.__tiff = Image.open(self.tiffFileName)
+        self.__redFileName = "redTmp.tif"
 
         self.channels = self.get_channels()
         self.Z = self.get_z()
@@ -22,24 +20,21 @@ class Tif:
 
         # relative shift
         self.__list_shift = [(0, 0) for i in range(self.T)]
-        self.imageNumber    = self.channels * self.T * self.Z
-        self.currentT        = 0
-        self.currentZ        = 0
+        self.imageNumber = self.channels * self.T * self.Z
+        self.currentT = 0
+        self.currentZ = 0
         self.currentChannel = 0
 
-        self.width        = self.__tiff.getbbox()[2]
-        self.height        = self.__tiff.getbbox()[3]
-        self.zoom        = 1
-        self.__background = Image.new(self.__tiff.mode,
-                (self.width, self.height))
+        self.width = self.__tiff.getbbox()[2]
+        self.height = self.__tiff.getbbox()[3]
+        self.zoom = 1
+        self.__background = Image.new(self.__tiff.mode, (self.width, self.height))
 
         self._is_running = False
         self._access = RLock()
 
     def index_from_tzc(self, t=0, z=0, c=0):
-        index = (t * self.Z * self.channels +
-                         z * self.channels +
-                         c)
+        index = t * self.Z * self.channels + z * self.channels + c
         return index
 
     def get_current_shift(self):
@@ -50,9 +45,9 @@ class Tif:
             t = self.currentT
 
         self.__list_shift[t] = (
-                self.__list_shift[t][0] + delta[0],
-                self.__list_shift[t][1] + delta[1],
-                )
+            self.__list_shift[t][0] + delta[0],
+            self.__list_shift[t][1] + delta[1],
+        )
 
     def tzc_image(self, t=0, z=0, c=0):
         self.__tiff.seek(self.index_from_tzc(t=t, z=z, c=c))
@@ -74,17 +69,22 @@ class Tif:
                 continue
             if type(element[0]) is not str:
                 continue
-            if 'ImageJ' in element[0]:
+            if "ImageJ" in element[0]:
                 return element[0]
 
-        raise RuntimeError("Could not find size of the stack."
-                "Are you sure the tiff file is coming from ImageJ ?")
+        raise RuntimeError(
+            "Could not find size of the stack."
+            "Are you sure the tiff file is coming from ImageJ ?"
+        )
 
     def format_imagej_metadata(self):
         metadata = self.get_imagej_metadata()
-        ret = {name: value for (name, value) in
-               [tuple(x.split("=")) for x in metadata.split("\n")
-                   if "=" in x]}
+        ret = {
+            name: value
+            for (name, value) in [
+                tuple(x.split("=")) for x in metadata.split("\n") if "=" in x
+            ]
+        }
         return ret
 
     def get_t(self):
@@ -122,7 +122,7 @@ class Tif:
             self.__list_shift[i + 1] = (
                 delta[1],
                 delta[0],
-                )
+            )
 
         self._is_running = False
 
@@ -133,10 +133,10 @@ class Tif:
     def shift(self, img, dx, dy):
         size = img.size if type(img.size) != int else img.shape
         rec = np.zeros(size)
-        slx_rec = slice(max(0, dx),min(size[0], size[0]+dx))
-        sly_rec = slice(max(0, dy),min(size[1], size[1]+dy))
-        slx_sen = slice(max(0, -dx),min(size[0], size[0]-dx))
-        sly_sen = slice(max(0, -dy),min(size[1], size[1]-dy))
+        slx_rec = slice(max(0, dx), min(size[0], size[0] + dx))
+        sly_rec = slice(max(0, dy), min(size[1], size[1] + dy))
+        slx_sen = slice(max(0, -dx), min(size[0], size[0] - dx))
+        sly_sen = slice(max(0, -dy), min(size[1], size[1] - dy))
         rec[slx_rec, sly_rec] = img[slx_sen, sly_sen]
         return rec
 
@@ -159,7 +159,7 @@ class Tif:
             for j in range(-r, r):
                 target = self.shift(sec, i, j)
                 xd = target - first
-                score = np.sum((xd)**2)
+                score = np.sum((xd) ** 2)
 
                 if score < minimum:
                     minimum = score
@@ -171,20 +171,17 @@ class Tif:
         with self._access:
             image = self.adjust()
             if self.zoom != 1:
-                width    = int(self.width * self.zoom)
-                height    = int(self.height * self.zoom)
-                image    = image.resize((width, height))
-            image.save(self.__redFileName)
-            # return toqpixmap(image)
+                width = int(self.width * self.zoom)
+                height = int(self.height * self.zoom)
+                image = image.resize((width, height))
+
             with BytesIO() as f:
-                image.save(f, format='png')
+                image.save(f, format="png")
                 f.seek(0)
                 image_data = f.read()
                 qimg = QImage.fromData(image_data)
                 patch_qt = QPixmap.fromImage(qimg)
                 return patch_qt
-            return image.convert("L")
-            return self.__redFileName
 
     def get_absolute_shift(self, t):
         abs_x, abs_y = 0, 0
@@ -196,8 +193,7 @@ class Tif:
         return abs_x, abs_y
 
     def adjust(self):
-        self.tzc_image(c=self.currentChannel, t=self.currentT,
-                z=self.currentZ)
+        self.tzc_image(c=self.currentChannel, t=self.currentT, z=self.currentZ)
         # x    = self.Xs[tIndex][zIndex]
         # y    = self.Ys[tIndex][zIndex]
         t = self.currentT
@@ -239,16 +235,20 @@ class Tif:
         for tIndex in range(0, self.T):
             for zIndex in range(0, self.Z):
                 for channel in range(0, self.channels):
-                    fileName = directory + str(tIndex).zfill(tLength) \
-                            + "_" + str(zIndex).zfill(zLength) \
-                            + "_" + str(channel).zfill(cLength) \
-                            + ".tif"
+                    fileName = (
+                        directory
+                        + str(tIndex).zfill(tLength)
+                        + "_"
+                        + str(zIndex).zfill(zLength)
+                        + "_"
+                        + str(channel).zfill(cLength)
+                        + ".tif"
+                    )
 
                     i += 1
-                    self.set_index(t=tIndex, z=zIndex)
+                    self.set_index(t=tIndex, z=zIndex, c=channel)
                     self.adjust().save(fileName)
         return True
-
 
     def save(self):
         self.saveAs(self.tiffFileName)
