@@ -28,8 +28,8 @@ python3.9
 
 
 ### For windows
-Make sure you have all the prerequisite
-Download the zip file (green button "code")
+Make sure you have all the prerequisite  
+Download the zip file (green button "code")  
 Unzip the file
 
 To install, double click on `install.bat`
