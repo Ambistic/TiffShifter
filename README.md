@@ -61,6 +61,5 @@ python3 main.py
 To update
 ```bash
 # be sure to be in the TiffShifter folder (use `pwd`)
-source tifenv/bin/activate
-python3 main.py
+git pull origin main
 ```
