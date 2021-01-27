@@ -36,6 +36,8 @@ To install, double click on `install.bat`
 
 Then to run, double click on `run.bat`
 
+If you want a Desktop shortcut, right click on `run.bat`, click on `Send To` (Envoyer vers) and `Desktop shortcut`
+
 
 ### For MacOS / Linux
 Run in a shell
