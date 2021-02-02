@@ -25,6 +25,8 @@ class Tif:
         self.currentZ = 0
         self.currentChannel = 0
 
+        self.shift_range = 8
+
         self.width = self.__tiff.getbbox()[2]
         self.height = self.__tiff.getbbox()[3]
         self.zoom = 1
@@ -32,6 +34,9 @@ class Tif:
 
         self._is_running = False
         self._access = RLock()
+
+    def set_shift_range(self, value):
+        self.shift_range = value
 
     def index_from_tzc(self, t=0, z=0, c=0):
         index = t * self.Z * self.channels + z * self.channels + c
@@ -145,10 +150,11 @@ class Tif:
         This function can be optimized by earlystopping, or random exploration and
         lowering of step (start with 3, then 2, then 1)
         """
+        r = self.shift_range
         first = np.asarray(self.get_image(t, z, c))
         first = first / np.linalg.norm(first)
 
-        self.currentT += 1
+        # self.currentT += 1  # WHY ??
         sec = np.asarray(self.get_image(t + 1, z, c))
         sec = sec / np.linalg.norm(sec)
 

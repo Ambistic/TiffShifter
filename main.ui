@@ -219,6 +219,22 @@
           </property>
          </widget>
         </item>
+        <item row="2" column="6">
+         <widget class="QSpinBox" name="spinBox">
+          <property name="suffix">
+           <string/>
+          </property>
+          <property name="prefix">
+           <string>Shift Range : </string>
+          </property>
+          <property name="singleStep">
+           <number>2</number>
+          </property>
+          <property name="value">
+           <number>8</number>
+          </property>
+         </widget>
+        </item>
        </layout>
       </item>
       <item>

@@ -3,7 +3,7 @@ import os
 
 from PySide2.QtUiTools import QUiLoader
 from PySide2.QtWidgets import QApplication, QPushButton, QLineEdit, \
-        QLabel, QAction, QFileDialog, QSlider, QProgressBar
+        QLabel, QAction, QFileDialog, QSlider, QProgressBar, QSpinBox
 from PySide2.QtCore import QFile, QObject, Qt
 from PySide2 import QtGui
 from threading import RLock
@@ -13,6 +13,7 @@ from Stack import Tif
 class Interface(QObject):
 
     def __init__(self, ui_file="main.ui", parent=None):
+        self.__stack = None
         super(Interface, self).__init__(parent)
         ui_file = QFile(ui_file)
         ui_file.open(QFile.ReadOnly)
@@ -59,12 +60,21 @@ class Interface(QObject):
         self.next.clicked.connect(self.update_next)
         self.runner.clicked.connect(self.run)
 
+        self.shift_range = self.window.findChild(QSpinBox, "spinBox")
+        self.shift_range.valueChanged.connect(self.change_shift_range)
+
         self.progress = self.window.findChild(QProgressBar, "run_progress")
         self.label_shift = self.window.findChild(QLabel, "shift_label")
         # btn = self.window.findChild(QPushButton, 'pushButton')
         # btn.clicked.connect(self.ok_handler)
         self._open()
         self.window.show()
+
+    def change_shift_range(self, value):
+        with self._access:
+            if self.__stack is None:
+                return
+            self.__stack.set_shift_range(value)
 
     def get_modifier_value(self):
         modifiers = QApplication.keyboardModifiers()
@@ -88,6 +98,9 @@ class Interface(QObject):
         c, z, t = self.get_slider_values()
         self._set_sliders(c, z, t)
         self._set_labels(c, z, t)
+        with self._access:
+            self.__stack.set_shift_range(self.shift_range.value)
+
         self.show_image()
 
     def _set_sliders(self, c, z, t):
