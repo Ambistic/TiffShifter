@@ -99,7 +99,7 @@ class Interface(QObject):
         self._set_sliders(c, z, t)
         self._set_labels(c, z, t)
         with self._access:
-            self.__stack.set_shift_range(self.shift_range.value)
+            self.__stack.set_shift_range(self.shift_range.value())
 
         self.show_image()
 
