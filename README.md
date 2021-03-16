@@ -44,6 +44,9 @@ Run in a shell
 
 To install
 ```bash
+# For MacOS only
+xcode-select --install
+
 git clone https://github.com/Ambistic/TiffShifter.git
 cd TiffShifter
 python3 -m venv tifenv
