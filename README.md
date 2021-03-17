@@ -51,6 +51,7 @@ git clone https://github.com/Ambistic/TiffShifter.git
 cd TiffShifter
 python3 -m venv tifenv
 source tifenv/bin/activate
+python3 -m pip install --upgrade pip
 python3 -m pip install PySide2 Pillow numpy
 ```
 
